@@ -212,6 +212,19 @@ html,body{overscroll-behavior:none}
 .view #pinsw,.view .pickt,.view .bpill,.view #pinit{display:none}
 .pit.pop{animation:pitpop .6s cubic-bezier(.2,.9,.3,1.3)}
 @keyframes pitpop{from{opacity:0;transform:translate(-50%,-50%) rotate(var(--rot,0deg)) scale(.6)}}
+#board{left:40px;top:170px;width:1840px;height:880px}
+.pickt{top:245px}
+.pinbtn img{width:75px}
+#pinit{left:1603px;top:575px}
+#nah{position:absolute;left:1603px;top:650px;transform:translate(-50%,-50%);font:400 36px/1 "GochiHand",cursive;color:#2a1a18;-webkit-text-stroke:8px #fff;paint-order:stroke fill;background:none;border:0;cursor:pointer;white-space:nowrap;padding:6px 14px}
+.bnote{left:1603px;top:735px;width:430px;white-space:pre-line}
+.view #nah,.view #pinit{display:none}
+.p #board{left:20px;top:250px;width:860px;height:900px}
+.p .pickt{left:450px;top:1190px}
+.p #pinit{left:250px;top:1475px}.p #nah{left:620px;top:1475px}
+.p .bnote{left:450px;top:1415px;width:800px}
+#board{z-index:1}
+.btitle,.pickt,#pinsw,.pinbtn,#pinit,#nah,.bnote,#home5{z-index:6}
 </style>
 </head>
 <body>
@@ -247,8 +260,7 @@ html,body{overscroll-behavior:none}
 <div id="board"></div>
 <div id="pickT" class="pickt">pick your pin</div>
 <div id="pinsw"></div>
-<button class="bpill" id="bbig">bigger</button><button class="bpill" id="bsm">smaller</button>
-<button id="pinit">pin it!</button>
+<button id="pinit">pin</button><button id="nah">nah, next time</button>
 <div id="bnote" class="bnote"></div>
 </div></div>
 <main>
@@ -675,7 +687,7 @@ async function stripThumb(){
   return u;
 }
 function pitEl(p,mine){
-  const d=document.createElement('div'),B=BR();d.className='pit'+(mine?' mine':'');
+  const d=document.createElement('div'),B=BR();d.className='pit'+(mine?' mine':'');if(p.id)d.dataset.id=p.id;
   d.style.cssText='left:'+(p.cx*100)+'%;top:'+(p.cy*100)+'%;--h:'+(p.h*B.h)+'px;--rot:'+(p.rot||0)+'deg';
   const a=document.createElement('img');a.className='pst';a.alt='';a.src=p.img;const b=document.createElement('img');b.className='ppn';b.alt='';b.src=A.pins[p.pin|0]||A.pins[0];
   d.appendChild(a);d.appendChild(b);return d;
@@ -684,7 +696,7 @@ function autoPlace(){
   if(!M||M.done||M.moved||M.placed)return;M.placed=true;
   const pts=boardList.filter(p=>typeof p.cx==='number');if(!pts.length)return;
   let best=null,bd=-1;
-  for(let i=0;i<40;i++){const cx=.1+Math.random()*.8,cy=.38+Math.random()*.24,d=Math.min(...pts.map(p=>Math.hypot((cx-p.cx)*1.5,cy-p.cy)));if(d>bd){bd=d;best={cx,cy}}}
+  for(let i=0;i<40;i++){const cx=.08+Math.random()*(MODEP?.84:.64),cy=.38+Math.random()*.24,d=Math.min(...pts.map(p=>Math.hypot((cx-p.cx)*1.5,cy-p.cy)));if(d>bd){bd=d;best={cx,cy}}}
   M.cx=best.cx;M.cy=best.cy;updMine();
 }
 function updMine(){
@@ -703,7 +715,7 @@ function bindMine(e){
   e.addEventListener('wheel',ev=>{if(M.done)return;ev.preventDefault();M.h=Math.max(.25,Math.min(.95,M.h*(ev.deltaY<0?1.06:1/1.06)));updMine()},{passive:false});
 }
 function placeBoardUI(){
-  const P=MODEP,pos=P?[[190,1195],[450,1195],[710,1195],[190,1310],[450,1310],[710,1310]]:[[1481,530],[1610,527],[1735,528],[1481,662],[1610,665],[1740,660]];
+  const P=MODEP,pos=P?[[300,1270],[450,1270],[600,1270],[300,1350],[450,1350],[600,1350]]:[[1520,335],[1610,335],[1698,335],[1520,428],[1610,428],[1701,428]];
   document.querySelectorAll('.pinbtn').forEach((b,i)=>{b.style.left=pos[i][0]+'px';b.style.top=pos[i][1]+'px'});
   const e=$('#mine');if(e)updMine();
   document.querySelectorAll('#board .pit.other').forEach(x=>x.remove());renderBoard();
@@ -713,21 +725,22 @@ function buildBoardUI(){
   A.pins.forEach((src,i)=>{const b=document.createElement('button');b.className='pinbtn';b.setAttribute('aria-label','pin '+(i+1));b.innerHTML='<img src="'+src+'" alt="">';
     b.onclick=()=>{if(M&&!M.done){M.pin=i;updMine()}};w.appendChild(b)});
 }
+function ord(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
 function setTitle(n,total,view){
-  $('#btitle').innerHTML=(view?'đã có '+total+' người pin hình':'bạn là người thứ '+n)+'<br>saying cheeseeeeeeeeeeeeeee!!!';
-  $('#btotal').textContent=view?'':'đã có '+total+' người trên board';
+  $('#btitle').innerHTML=view?(total+' '+(total===1?'person has':'people have')+' said<br>cheeeeeesssssseeeeeee!'):('welcome, u are the '+ord(n)+' to<br>say cheeeeeesssssseeeeeee!');
+  $('#btotal').textContent='';
 }
 const seen=new Set();
 function renderBoard(){
   const b=$('#board');b.querySelectorAll('.pit.other').forEach(e=>e.remove());
-  boardList.forEach(p=>{if(!p.img||typeof p.cx!=='number')return;const e=pitEl(p,false);e.classList.add('other');if(p.id&&!seen.has(p.id)){seen.add(p.id);if(seen.size>1)e.classList.add('pop')}b.insertBefore(e,b.firstChild)});
+  boardList.forEach(p=>{if(!p.img||typeof p.cx!=='number')return;const e=pitEl(p,false);e.classList.add('other');if(p.id&&!seen.has(p.id)){seen.add(p.id);if(seen.size>1)e.classList.add('pop')}b.appendChild(e)});
   const m=$('#mine');if(m)b.appendChild(m);
 }
 async function refreshBoard(){
   try{
     const keys=await Board.keys();boardList=await Board.list();autoPlace();
     if(!M)setTitle(0,keys.length,true);else if(M.done)setTitle(M.n,keys.length);else setTitle(keys.length+1,keys.length);
-    if(M&&!M.done&&BOARD_URL)$('#bnote').textContent='everyone who opens this page can see your pin';
+    if(M&&!M.done&&BOARD_URL)$('#bnote').textContent='drag to move, scroll or pinch to resize\neveryone who opens this page can see your pin';
   }catch(e){$('#bnote').textContent="couldn't reach the board"}
   renderBoard();
 }
@@ -735,7 +748,7 @@ function stopBoard(){clearInterval(boardTimer);boardTimer=null}
 async function openBoard(view){
   go(5);buildBoardUI();placeBoardUI();$('#stg5').classList.toggle('view',view);
   const old=$('#mine');if(old)old.remove();seen.clear();boardList=[];renderBoard();
-  $('#bnote').textContent=BOARD_URL?(view?'':'everyone who opens this page can see your pin'):'board not connected yet, only pins from this device show here';
+  $('#bnote').textContent=BOARD_URL?(view?'':'drag to move, scroll or pinch to resize\neveryone who opens this page can see your pin'):'board not connected yet, only pins from this device show here';$('#pinit').hidden=false;$('#nah').textContent='nah, next time';
   if(!view){const e=pitEl(M,true);e.id='mine';$('#board').appendChild(e);bindMine(e);updMine();$('#pinit').disabled=false}
   await refreshBoard();stopBoard();boardTimer=setInterval(refreshBoard,10000);
 }
@@ -754,13 +767,12 @@ async function pinIt(){
     const name=await Board.add({img:M.img,cx:+M.cx.toFixed(4),cy:+M.cy.toFixed(4),h:+M.h.toFixed(3),rot:M.rot,pin:M.pin,ts:Date.now()});
     const keys=await Board.keys();let n=keys.indexOf(name)+1;if(n<=0)n=keys.length;
     M.done=true;M.n=n;const e=$('#mine');if(e)e.remove();
-    await refreshBoard();$('#bnote').textContent='pinned! thanks for saying cheese';
+    await refreshBoard();$('#bnote').textContent='pinned! thanks for saying cheese';$('#pinit').hidden=true;$('#nah').textContent='back to my strip';
   }catch(e){b.disabled=false;$('#bnote').textContent="couldn't pin, try again"}
 }
 $('#pinb').onclick=enterBoard;$('#seeboard').onclick=viewBoard;$('#pinit').onclick=pinIt;
 $('#home5').onclick=()=>{S.shots=[];go(0)};
-$('#bbig').onclick=()=>{if(M&&!M.done){M.h=Math.min(.95,M.h*1.12);updMine()}};
-$('#bsm').onclick=()=>{if(M&&!M.done){M.h=Math.max(.25,M.h/1.12);updMine()}};
+$('#nah').onclick=()=>{go(2);if(S.fmt!=='png')startPrev()};
 
 $('#home2').onclick=()=>{S.shots=[];go(0)};
 let PWID=null;
