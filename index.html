@@ -319,12 +319,35 @@ async function loadJSON(kind,id){
   if(el){const o=JSON.parse(el.textContent);if(kind==='th')el.remove();return o}
   const r=await fetch('themes/'+id+(kind==='lk'?'.lock':'')+'.json');if(!r.ok)throw new Error('load');return r.json();
 }
+async function urlOk(u,kind){try{const r=await fetch(u,{method:'HEAD',cache:'no-cache'});return r.ok&&(r.headers.get('content-type')||'').includes(kind)}catch(e){return false}}
+async function discover(max){
+  const ok=(u)=>urlOk(u,u.endsWith('.png')?'image':'json');
+  const out=[];let start=max+1;
+  for(let guard=0;guard<30;guard++){
+    const res=await Promise.all([0,1,2,3].map(async k=>{const id='T'+(start+k);
+      if(!await ok('themes/'+id+'.icon.png'))return null;
+      if(await ok('themes/'+id+'.json'))return{id};
+      if(await ok('themes/'+id+'.lock.json'))return{id,locked:true};
+      return null}));
+    const f=res.filter(Boolean);if(!f.length)break;
+    out.push(...f);start=Math.max(...f.map(t=>+t.id.slice(1)))+1;
+  }
+  return out;
+}
 async function loadManifest(){
-  try{
-    const el=document.getElementById('manifest');let m;
-    if(el)m=JSON.parse(el.textContent);else{const r=await fetch('themes/themes.json',{cache:'no-cache'});if(!r.ok)throw new Error('manifest');m=await r.json()}
-    if(m&&Array.isArray(m.themes)&&m.themes.length){THEMES=m.themes.map(t=>t.id);A.locked=m.themes.filter(t=>t.locked).map(t=>t.id)}
-  }catch(e){}
+  const base=THEMES.slice(),locked=new Set(A.locked||[]),el=document.getElementById('manifest'),ids=[];
+  let m=null;
+  try{if(el)m=JSON.parse(el.textContent);else{const r=await fetch('themes/themes.json',{cache:'no-cache'});if(r.ok)m=await r.json()}}catch(e){}
+  if(m&&Array.isArray(m.themes))m.themes.forEach(t=>{if(!t||!t.id)return;if(!ids.includes(t.id))ids.push(t.id);if(t.locked)locked.add(t.id);else locked.delete(t.id)});
+  base.forEach(id=>{if(!ids.includes(id))ids.push(id)});
+  if(!el){
+    const max=Math.max(0,...ids.map(i=>+i.slice(1)||0)),found=await discover(max);
+    const add=found.filter(t=>!ids.includes(t.id)).sort((a,b)=>(+b.id.slice(1))-(+a.id.slice(1)));
+    add.forEach(t=>{if(t.locked)locked.add(t.id)});ids.unshift(...add.map(t=>t.id));
+  }
+  if(!el)await Promise.all([...locked].map(async id=>{if(await urlOk('themes/'+id+'.json','json'))locked.delete(id)}));
+  const hid=new Set((m&&Array.isArray(m.hidden))?m.hidden:[]);
+  THEMES=ids.filter(id=>!hid.has(id));A.locked=[...locked];
 }
 async function initThemes(){
   await loadManifest();
@@ -335,7 +358,8 @@ async function ensureTheme(id){if(!A.th[id])A.th[id]=await loadJSON('th',id);con
 function showLoadErr(){const e=$('#lerr');if(e){e.textContent="can't load the theme files. make sure the 'themes' folder sits next to index.html";e.hidden=false}}
 async function pickTheme(id){
   const b=document.querySelector('.cbtn[data-c="'+id+'"]');if(b)b.classList.add('ld');
-  try{await ensureTheme(id);S.cn=id;paint0()}catch(e){showLoadErr()}finally{if(b)b.classList.remove('ld')}
+  try{await ensureTheme(id);S.cn=id;paint0()}catch(e){
+    if(await urlOk('themes/'+id+'.lock.json','json')){(A.locked=A.locked||[]).push(id);renderThemes();openPw(id)}else showLoadErr()}finally{if(b)b.classList.remove('ld')}
 }
 function renderThemes(){
   const st=$('#stage');st.querySelectorAll('.cbtn').forEach(e=>e.remove());
