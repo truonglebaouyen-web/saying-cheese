@@ -1,45 +1,35 @@
 {
+ "defaultSection": "cheesy",
+ "sections": [
+  "cheesy",
+  "bias"
+ ],
  "themes": [
   {
-   "id": "T13"
-  },
-  {
-   "id": "T12",
-   "locked": true
-  },
-  {
-   "id": "T11",
-   "locked": true
-  },
-  {
-   "id": "T10"
-  },
-  {
-   "id": "T9"
-  },
-  {
-   "id": "T8"
-  },
-  {
-   "id": "T7"
-  },
-  {
-   "id": "T6"
-  },
-  {
-   "id": "T5"
-  },
-  {
-   "id": "T4"
-  },
-  {
-   "id": "T3"
+   "id": "T1"
   },
   {
    "id": "T2"
   },
   {
-   "id": "T1"
+   "id": "T3"
+  },
+  {
+   "id": "T4"
+  },
+  {
+   "id": "T5"
+  },
+  {
+   "id": "T6"
   }
+ ],
+ "hidden": [
+  "T7",
+  "T8",
+  "T9",
+  "T10",
+  "T11",
+  "T12"
  ]
 }
