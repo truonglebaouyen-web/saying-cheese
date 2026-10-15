@@ -6,26 +6,6 @@
  ],
  "themes": [
   {
-   "id": "T14",
-   "section": "bias"
-  },
-  {
-   "id": "T18",
-   "section": "bias"
-  },
-  {
-   "id": "T17",
-   "section": "bias"
-  },
-  {
-   "id": "T16",
-   "section": "bias"
-  },
-  {
-   "id": "T15",
-   "section": "bias"
-  },
-  {
    "id": "T1",
    "section": "cheesy"
   },
@@ -48,6 +28,26 @@
   {
    "id": "T6",
    "section": "cheesy"
+  },
+  {
+   "id": "T14",
+   "section": "bias"
+  },
+  {
+   "id": "T18",
+   "section": "bias"
+  },
+  {
+   "id": "T17",
+   "section": "bias"
+  },
+  {
+   "id": "T16",
+   "section": "bias"
+  },
+  {
+   "id": "T15",
+   "section": "bias"
   }
  ],
  "disclaimer": "fan-made, for fans. all photos belong to their owners",
