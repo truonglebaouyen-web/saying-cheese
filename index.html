@@ -283,6 +283,7 @@ html,body{overscroll-behavior:none}
 .disc{left:960px;top:892px;font:400 23.3px/1.2 "Averta","Helvetica Neue",Arial,sans-serif;color:#23202a;-webkit-text-stroke:0;paint-order:normal;white-space:nowrap}
 .p .disc{left:450px;top:1452px;width:820px;font-size:19px;text-align:center;white-space:normal}
 .disc{display:none}
+.pit .ppn{width:max(32px,calc(var(--h)*.125))}
 </style>
 </head>
 <body>
@@ -392,7 +393,8 @@ function nudge(){
   e.textContent='pick a strip first!';e.style.color='#8b1718';clearTimeout(nudge.t);nudge.t=setTimeout(()=>{e.textContent=o;e.style.color=''},1800);
 }
 function isLocked(id){return (A.locked||[]).includes(id)&&!A.th[id]}
-const secOf=id=>(META[id]&&META[id].section)||DEF_SEC;
+function norm(s){return String(s==null?'':s).trim().toLowerCase()}
+const secOf=id=>norm((META[id]&&META[id].section)||DEF_SEC);
 const grpOf=id=>(META[id]&&META[id].group)||'other';
 function secs(){const s=[];THEMES.forEach(id=>{const k=secOf(id);if(!s.includes(k))s.push(k)});return s.sort((a,b)=>(a===DEF_SEC?-1:0)-(b===DEF_SEC?-1:0))}
 function groupsOf(sec){return []}
@@ -440,13 +442,21 @@ async function loadManifest(){
   const base=THEMES.slice(),locked=new Set(A.locked||[]),el=document.getElementById('manifest'),ids=[];
   let m=null;
   try{if(el)m=JSON.parse(el.textContent);else{const r=await fetch('themes/themes.json',{cache:'no-cache'});if(r.ok)m=await r.json()}}catch(e){}
-  if(m&&m.defaultSection)DEF_SEC=m.defaultSection;
-  if(m&&Array.isArray(m.sections)&&m.sections.length)SECTIONS=m.sections;
+  if(m&&m.defaultSection)DEF_SEC=norm(m.defaultSection);
+  if(m&&typeof m.pinSize==='number')PIN_H=Math.max(.15,Math.min(.6,m.pinSize));
+  if(m&&Array.isArray(m.sections)&&m.sections.length)SECTIONS=m.sections.map(norm);
   if(m&&typeof m.disclaimer==='string')DISC=m.disclaimer;
-  if(m&&Array.isArray(m.disclaimerSections))DISC_SEC=m.disclaimerSections;
+  if(m&&Array.isArray(m.disclaimerSections))DISC_SEC=m.disclaimerSections.map(norm);
   $('#disc').textContent=DISC;
   if(m&&Array.isArray(m.themes))m.themes.forEach(t=>{if(!t||!t.id)return;if(!ids.includes(t.id))ids.push(t.id);META[t.id]={section:t.section,group:t.group};if(t.locked)locked.add(t.id);else locked.delete(t.id)});
   base.forEach(id=>{if(!ids.includes(id))ids.push(id)});
+  if(!el&&m&&Array.isArray(m.themes)){
+    await Promise.all(ids.filter(id=>!base.includes(id)).map(async id=>{
+      const t=m.themes.find(x=>x&&x.id===id);if(!t)return;
+      if(!t.section){try{const r=await fetch('themes/'+id+'.meta.json',{cache:'no-cache'});if(r.ok){const mm=await r.json();if(mm.section){META[id]=META[id]||{};META[id].section=mm.section}}}catch(e){}}
+      if(t.locked===undefined&&!(await urlOk('themes/'+id+'.json','json'))&&(await urlOk('themes/'+id+'.lock.json','json')))locked.add(id);
+    }));
+  }
   if(!el){
     const max=Math.max(0,...ids.map(i=>+i.slice(1)||0),...((m&&Array.isArray(m.hidden))?m.hidden:[]).map(i=>+String(i).slice(1)||0)),found=await discover(max);
     const add=found.filter(t=>!ids.includes(t.id)).sort((a,b)=>(+b.id.slice(1))-(+a.id.slice(1)));
@@ -459,7 +469,7 @@ async function loadManifest(){
 }
 async function initThemes(){
   await loadManifest();
-  S.cn=THEMES.find(id=>!isLocked(id))||S.cn;SEC=secOf(S.cn);GRP=groupsOf(SEC).length?grpOf(S.cn):null;tpage=0;renderTabs();renderThemes();
+  S.cn=THEMES.find(id=>secOf(id)===DEF_SEC&&!isLocked(id))||THEMES.find(id=>!isLocked(id))||S.cn;SEC=secOf(S.cn);GRP=groupsOf(SEC).length?grpOf(S.cn):null;tpage=0;renderTabs();renderThemes();
   try{await ensureTheme(S.cn);renderThemes()}catch(e){showLoadErr()}
 }
 async function ensureTheme(id){if(!A.th[id])A.th[id]=await loadJSON('th',id);const e=$('#lerr');if(e)e.hidden=true;return A.th[id]}
@@ -796,7 +806,7 @@ async function saveStrip(){
 $('#dl2').onclick=saveStrip;
 /* ===== shared board ===== */
 const BOARD_URL='https://saying-cheese-default-rtdb.asia-southeast1.firebasedatabase.app';
-let M=null,boardTimer=null,boardList=[];
+let M=null,boardTimer=null,boardList=[],PIN_H=.3;
 const Board={
   async keys(){
     if(BOARD_URL){const r=await fetch(BOARD_URL+'/pins.json?shallow=true');if(!r.ok)throw new Error('board');return Object.keys(await r.json()||{}).sort()}
@@ -822,7 +832,7 @@ async function stripThumb(){
 }
 function pitEl(p,mine){
   const d=document.createElement('div'),B=BR();d.className='pit'+(mine?' mine':'');if(p.id)d.dataset.id=p.id;
-  d.style.cssText='left:'+(p.cx*100)+'%;top:'+(p.cy*100)+'%;--h:'+(p.h*B.h)+'px;--rot:'+(p.rot||0)+'deg';
+  d.style.cssText='left:'+(p.cx*100)+'%;top:'+(p.cy*100)+'%;--h:'+(PIN_H*B.h)+'px;--rot:'+(p.rot||0)+'deg';
   const a=document.createElement('img');a.className='pst';a.alt='';a.src=p.img;const b=document.createElement('img');b.className='ppn';b.alt='';b.src=A.pins[p.pin|0]||A.pins[0];
   d.appendChild(a);d.appendChild(b);return d;
 }
@@ -830,23 +840,22 @@ function autoPlace(){
   if(!M||M.done||M.moved||M.placed)return;M.placed=true;
   const pts=boardList.filter(p=>typeof p.cx==='number');if(!pts.length)return;
   let best=null,bd=-1;
-  for(let i=0;i<40;i++){const cx=.08+Math.random()*(MODEP?.84:.64),cy=.38+Math.random()*.24,d=Math.min(...pts.map(p=>Math.hypot((cx-p.cx)*1.5,cy-p.cy)));if(d>bd){bd=d;best={cx,cy}}}
+  for(let i=0;i<40;i++){const cx=.08+Math.random()*(MODEP?.84:.64),cy=.2+Math.random()*.6,d=Math.min(...pts.map(p=>Math.hypot((cx-p.cx)*1.5,cy-p.cy)));if(d>bd){bd=d;best={cx,cy}}}
   M.cx=best.cx;M.cy=best.cy;updMine();
 }
 function updMine(){
   const e=$('#mine');if(!e||!M)return;const B=BR();
-  e.style.left=(M.cx*100)+'%';e.style.top=(M.cy*100)+'%';e.style.setProperty('--h',(M.h*B.h)+'px');e.querySelector('.ppn').src=A.pins[M.pin];
+  e.style.left=(M.cx*100)+'%';e.style.top=(M.cy*100)+'%';e.style.setProperty('--h',(PIN_H*B.h)+'px');e.querySelector('.ppn').src=A.pins[M.pin];
   document.querySelectorAll('.pinbtn').forEach((b,i)=>b.classList.toggle('sel',i===M.pin));
 }
 function bindMine(e){
   const ptr=new Map(),k=()=>{const s=$('#stg5');return s.getBoundingClientRect().width/s.offsetWidth};
   e.addEventListener('pointerdown',ev=>{if(M.done)return;ev.preventDefault();e.setPointerCapture(ev.pointerId);ptr.set(ev.pointerId,{x:ev.clientX,y:ev.clientY})});
-  e.addEventListener('pointermove',ev=>{const p=ptr.get(ev.pointerId);if(!p||M.done)return;
-    if(ptr.size>=2){const v=[...ptr.values()],d0=Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y);p.x=ev.clientX;p.y=ev.clientY;const d1=Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y);if(d0>0)M.h=Math.max(.25,Math.min(.95,M.h*d1/d0))}
-    else{M.moved=true;const B=BR(),s=k();M.cx=Math.max(.04,Math.min(.96,M.cx+(ev.clientX-p.x)/(s*B.w)));M.cy=Math.max(.04,Math.min(.96,M.cy+(ev.clientY-p.y)/(s*B.h)));p.x=ev.clientX;p.y=ev.clientY}
-    updMine()});
+  e.addEventListener('pointermove',ev=>{const p=ptr.get(ev.pointerId);if(!p||M.done||ptr.size>1)return;
+    M.moved=true;const B=BR(),s=k(),hh=PIN_H/2+.01;
+    M.cx=Math.max(.04,Math.min(.96,M.cx+(ev.clientX-p.x)/(s*B.w)));M.cy=Math.max(hh,Math.min(1-hh,M.cy+(ev.clientY-p.y)/(s*B.h)));
+    p.x=ev.clientX;p.y=ev.clientY;updMine()});
   const up=ev=>{ptr.delete(ev.pointerId)};e.addEventListener('pointerup',up);e.addEventListener('pointercancel',up);
-  e.addEventListener('wheel',ev=>{if(M.done)return;ev.preventDefault();M.h=Math.max(.25,Math.min(.95,M.h*(ev.deltaY<0?1.06:1/1.06)));updMine()},{passive:false});
 }
 function placeBoardUI(){
   const P=MODEP,pos=P?[[300,1270],[450,1270],[600,1270],[300,1350],[450,1350],[600,1350]]:[[1520,335],[1610,335],[1698,335],[1520,428],[1610,428],[1701,428]];
@@ -874,7 +883,7 @@ async function refreshBoard(){
   try{
     const keys=await Board.keys();boardList=await Board.list();autoPlace();
     if(!M)setTitle(0,keys.length,true);else if(M.done)setTitle(M.n,keys.length);else setTitle(keys.length+1,keys.length);
-    if(M&&!M.done&&BOARD_URL)$('#bnote').textContent='drag to move, scroll or pinch to resize\neveryone who opens this page can see your pin';
+    if(M&&!M.done&&BOARD_URL)$('#bnote').textContent='drag to place your strip\neveryone who opens this page can see your pin';
   }catch(e){$('#bnote').textContent="couldn't reach the board"}
   renderBoard();
 }
@@ -882,7 +891,7 @@ function stopBoard(){clearInterval(boardTimer);boardTimer=null}
 async function openBoard(view){
   go(5);buildBoardUI();placeBoardUI();$('#stg5').classList.toggle('view',view);
   const old=$('#mine');if(old)old.remove();seen.clear();boardList=[];renderBoard();
-  $('#bnote').textContent=BOARD_URL?(view?'':'drag to move, scroll or pinch to resize\neveryone who opens this page can see your pin'):'board not connected yet, only pins from this device show here';$('#pinit').hidden=false;$('#nah').textContent='nah, next time';
+  $('#bnote').textContent=BOARD_URL?(view?'':'drag to place your strip\neveryone who opens this page can see your pin'):'board not connected yet, only pins from this device show here';$('#pinit').hidden=false;$('#nah').textContent='nah, next time';
   if(!view){const e=pitEl(M,true);e.id='mine';$('#board').appendChild(e);bindMine(e);updMine();$('#pinit').disabled=false}
   await refreshBoard();stopBoard();boardTimer=setInterval(refreshBoard,10000);
 }
@@ -890,7 +899,7 @@ async function enterBoard(){
   const btn=$('#pinb');btn.disabled=true;
   try{
     const img=await stripThumb();
-    M={cx:.4+Math.random()*.2,cy:.5,h:.55,rot:+(Math.random()*8-4).toFixed(1),pin:0,img,done:false,n:0};
+    M={cx:.4+Math.random()*.2,cy:.5,h:PIN_H,rot:+(Math.random()*8-4).toFixed(1),pin:0,img,done:false,n:0};
     await openBoard(false);
   }finally{btn.disabled=false}
 }

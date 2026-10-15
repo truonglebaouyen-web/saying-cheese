@@ -6,54 +6,29 @@
  ],
  "themes": [
   {
-   "id": "T1",
-   "section": "cheesy"
+   "id": "T1"
   },
   {
-   "id": "T2",
-   "section": "cheesy"
+   "id": "T2"
   },
   {
-   "id": "T3",
-   "section": "cheesy"
+   "id": "T3"
   },
   {
-   "id": "T4",
-   "section": "cheesy"
+   "id": "T4"
   },
   {
-   "id": "T5",
-   "section": "cheesy"
+   "id": "T5"
   },
   {
-   "id": "T6",
-   "section": "cheesy"
-  },
-  {
-   "id": "T14",
-   "section": "bias"
-  },
-  {
-   "id": "T18",
-   "section": "bias"
-  },
-  {
-   "id": "T17",
-   "section": "bias"
-  },
-  {
-   "id": "T16",
-   "section": "bias"
-  },
-  {
-   "id": "T15",
-   "section": "bias"
+   "id": "T6"
   }
  ],
  "disclaimer": "fan-made, for fans. all photos belong to their owners",
  "disclaimerSections": [
   "bias"
  ],
+ "pinSize": 0.3,
  "hidden": [
   "T7",
   "T8",
