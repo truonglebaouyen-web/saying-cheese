@@ -1,0 +1,64 @@
+{
+ "defaultSection": "cheesy",
+ "sections": [
+  "cheesy",
+  "bias"
+ ],
+ "themes": [
+  {
+   "id": "T1",
+   "section": "cheesy"
+  },
+  {
+   "id": "T2",
+   "section": "cheesy"
+  },
+  {
+   "id": "T3",
+   "section": "cheesy"
+  },
+  {
+   "id": "T4",
+   "section": "cheesy"
+  },
+  {
+   "id": "T5",
+   "section": "cheesy"
+  },
+  {
+   "id": "T6",
+   "section": "cheesy"
+  },
+  {
+   "id": "T7",
+   "name": "PKL",
+   "section": "bias"
+  },
+  {
+   "id": "T8",
+   "name": "ChuThom",
+   "section": "bias"
+  },
+  {
+   "id": "T9",
+   "name": "HaAnHuy",
+   "section": "bias"
+  },
+  {
+   "id": "T10",
+   "name": "Dino",
+   "section": "bias"
+  },
+  {
+   "id": "T11",
+   "name": "Cortis",
+   "section": "bias"
+  }
+ ],
+ "disclaimer": "fan-made, for fans. all photos belong to their owners",
+ "disclaimerSections": [
+  "bias"
+ ],
+ "pinSize": 0.3,
+ "hidden": []
+}
