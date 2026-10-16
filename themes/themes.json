@@ -7,38 +7,57 @@
  "themes": [
   {
    "id": "T1",
+   "name": "tomato",
    "section": "cheesy"
   },
   {
    "id": "T2",
+   "name": "star-field",
    "section": "cheesy"
   },
   {
    "id": "T3",
+   "name": "cat-sandwich",
    "section": "cheesy"
   },
   {
    "id": "T4",
+   "name": "brown-star",
    "section": "cheesy"
   },
   {
    "id": "T5",
+   "name": "hamster",
    "section": "cheesy"
   },
   {
    "id": "T6",
+   "name": "blue-star",
    "section": "cheesy"
   },
   {
-   "id": "T14",
+   "id": "T15",
+   "name": "p-k-linh",
    "section": "bias"
   },
   {
-   "id": "T15",
+   "id": "T13",
+   "name": "chu-thom",
+   "section": "bias"
+  },
+  {
+   "id": "T14",
+   "name": "ha-an-huy",
    "section": "bias"
   },
   {
    "id": "T16",
+   "name": "cortis",
+   "section": "bias"
+  },
+  {
+   "id": "T17",
+   "name": "17-dino",
    "section": "bias"
   }
  ],
